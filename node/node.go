@@ -89,10 +89,10 @@ func NewNode(ctx context.Context, conf config.NodeConfig, nodeKey crypto.PrivKey
 		return nil, err
 	}
 
-	indexerService, txIndexer, blockIndexer, err := createAndStartIndexerService(conf, DefaultDBProvider, eventBus, logger)
-	if err != nil {
-		return nil, err
-	}
+	// indexerService, txIndexer, blockIndexer, err := createAndStartIndexerService(conf, DefaultDBProvider, eventBus, logger)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	client, err := p2p.NewClient(conf.P2P, nodeKey, genesis.ChainID, logger.With("module", "p2p"))
 	if err != nil {
@@ -140,9 +140,9 @@ func NewNode(ctx context.Context, conf config.NodeConfig, nodeKey crypto.PrivKey
 		mempoolIDs:     mpIDs,
 		incomingTxCh:   make(chan *p2p.GossipMessage),
 		Store:          s,
-		TxIndexer:      txIndexer,
-		IndexerService: indexerService,
-		BlockIndexer:   blockIndexer,
+		// TxIndexer:      txIndexer,
+		// IndexerService: indexerService,
+		// BlockIndexer:   blockIndexer,
 		ctx:            ctx,
 	}
 

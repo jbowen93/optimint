@@ -2,23 +2,19 @@ package store
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"sync"
 
 	tmstate "github.com/tendermint/tendermint/proto/tendermint/state"
 	"go.uber.org/multierr"
 
-	"github.com/celestiaorg/optimint/state"
 	"github.com/celestiaorg/optimint/types"
 )
 
 var (
-	blockPrefix     = [1]byte{1}
-	indexPrefix     = [1]byte{2}
-	commitPrefix    = [1]byte{3}
-	statePrefix     = [1]byte{4}
-	responsesPrefix = [1]byte{5}
+	blockPrefix  = [1]byte{1}
+	indexPrefix  = [1]byte{2}
+	commitPrefix = [1]byte{3}
 )
 
 // DefaultStore is a default store implmementation.
@@ -151,32 +147,6 @@ func (s *DefaultStore) LoadCommitByHash(hash [32]byte) (*types.Commit, error) {
 	return commit, err
 }
 
-// UpdateState updates state saved in Store. Only one State is stored.
-// If there is no State in Store, state will be saved.
-func (s *DefaultStore) UpdateState(state state.State) error {
-	blob, err := json.Marshal(state)
-	if err != nil {
-		return err
-	}
-	return s.db.Set(getStateKey(), blob)
-}
-
-// LoadState returns last state saved with UpdateState.
-func (s *DefaultStore) LoadState() (state.State, error) {
-	var state state.State
-
-	blob, err := s.db.Get(getStateKey())
-	if err != nil {
-		return state, err
-	}
-
-	err = json.Unmarshal(blob, &state)
-	s.mtx.Lock()
-	s.height = uint64(state.LastBlockHeight)
-	s.mtx.Unlock()
-	return state, err
-}
-
 func (s *DefaultStore) loadHashFromIndex(height uint64) ([32]byte, error) {
 	blob, err := s.db.Get(getIndexKey(height))
 
@@ -203,14 +173,4 @@ func getIndexKey(height uint64) []byte {
 	buf := make([]byte, 8)
 	binary.BigEndian.PutUint64(buf, height)
 	return append(indexPrefix[:], buf[:]...)
-}
-
-func getStateKey() []byte {
-	return statePrefix[:]
-}
-
-func getResponsesKey(height uint64) []byte {
-	buf := make([]byte, 8)
-	binary.BigEndian.PutUint64(buf, height)
-	return append(responsesPrefix[:], buf[:]...)
 }

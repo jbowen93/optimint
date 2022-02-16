@@ -26,6 +26,7 @@ type BlockExecutor struct {
 	chainID         string
 	proxyApp        proxy.AppConnConsensus
 	mempool         mempool.Mempool
+	stateStore      Store
 
 	eventBus *tmtypes.EventBus
 
@@ -34,7 +35,7 @@ type BlockExecutor struct {
 
 // NewBlockExecutor creates new instance of BlockExecutor.
 // Proposer address and namespace ID will be used in all newly created blocks.
-func NewBlockExecutor(proposerAddress []byte, namespaceID [8]byte, chainID string, mempool mempool.Mempool, proxyApp proxy.AppConnConsensus, eventBus *tmtypes.EventBus, logger log.Logger) *BlockExecutor {
+func NewBlockExecutor(proposerAddress []byte, namespaceID [8]byte, chainID string, mempool mempool.Mempool, proxyApp proxy.AppConnConsensus, eventBus *tmtypes.EventBus, logger log.Logger, stateStore Store) *BlockExecutor {
 	return &BlockExecutor{
 		proposerAddress: proposerAddress,
 		namespaceID:     namespaceID,
@@ -43,6 +44,7 @@ func NewBlockExecutor(proposerAddress []byte, namespaceID [8]byte, chainID strin
 		mempool:         mempool,
 		eventBus:        eventBus,
 		logger:          logger,
+		stateStore:      stateStore,
 	}
 }
 
@@ -118,6 +120,10 @@ func (e *BlockExecutor) ApplyBlock(ctx context.Context, state State, block *type
 
 	resp, err := e.execute(ctx, state, block)
 	if err != nil {
+		return State{}, 0, err
+	}
+
+	if err := e.stateStore.SaveBlockResponses(block.Header.Height, resp); err != nil {
 		return State{}, 0, err
 	}
 

@@ -19,6 +19,7 @@ import (
 
 	"github.com/celestiaorg/optimint/mempool"
 	"github.com/celestiaorg/optimint/mocks"
+	"github.com/celestiaorg/optimint/store"
 	"github.com/celestiaorg/optimint/types"
 )
 
@@ -37,8 +38,10 @@ func TestCreateBlock(t *testing.T) {
 
 	nsID := [8]byte{1, 2, 3, 4, 5, 6, 7, 8}
 
+	store := New(store.NewDefaultInMemoryKVStore())
+
 	mpool := mempool.NewCListMempool(cfg.DefaultMempoolConfig(), proxy.NewAppConnMempool(client), 0)
-	executor := NewBlockExecutor([]byte("test address"), nsID, "test", mpool, proxy.NewAppConnConsensus(client), nil, logger)
+	executor := NewBlockExecutor([]byte("test address"), nsID, "test", mpool, proxy.NewAppConnConsensus(client), nil, logger, store)
 
 	state := State{}
 	state.ConsensusParams.Block.MaxBytes = 100
@@ -93,10 +96,12 @@ func TestApplyBlock(t *testing.T) {
 	nsID := [8]byte{1, 2, 3, 4, 5, 6, 7, 8}
 	chainID := "test"
 
+	store := New(store.NewDefaultInMemoryKVStore())
+
 	mpool := mempool.NewCListMempool(cfg.DefaultMempoolConfig(), proxy.NewAppConnMempool(client), 0)
 	eventBus := tmtypes.NewEventBus()
 	require.NoError(eventBus.Start())
-	executor := NewBlockExecutor([]byte("test address"), nsID, chainID, mpool, proxy.NewAppConnConsensus(client), eventBus, logger)
+	executor := NewBlockExecutor([]byte("test address"), nsID, chainID, mpool, proxy.NewAppConnConsensus(client), eventBus, logger, store)
 
 	txQuery, err := query.New("tm.event='Tx'")
 	require.NoError(err)

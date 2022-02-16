@@ -3,9 +3,10 @@ package state
 import (
 	"encoding/binary"
 	"encoding/json"
+	"sync"
+
 	"github.com/celestiaorg/optimint/store"
 	tmstate "github.com/tendermint/tendermint/proto/tendermint/state"
-	"sync"
 )
 
 var (
@@ -23,8 +24,12 @@ type Store interface {
 	// UpdateState updates state saved in Store. Only one State is stored.
 	// If there is no State in Store, state will be saved.
 	UpdateState(state State) error
+	
 	// LoadState returns last state saved with UpdateState.
 	LoadState() (State, error)
+
+	// Height returns height of the highest block in store.
+	Height() uint64
 }
 
 type DefaultStore struct {
